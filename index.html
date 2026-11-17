@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <title>Calcolatrice</title>
+        <meta charset="UTF-8">
+        <style>
+            * {
+                box-sizing: border-box;
+            }
+
+            body {
+                margin: 0;
+                min-height: 100vh;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                background: #20232e;
+                font-family: Arial, sans-serif;
+            }
+
+            body > * {
+                text-align: center;
+            }
+
+            label {
+                display: block;
+                color: white;
+                font-size: 22px;
+                margin-bottom: 15px;
+            }
+
+            #numero {
+                width: 280px;
+                height: 70px;
+                padding: 15px;
+                margin-bottom: 20px;
+                border: none;
+                border-radius: 12px;
+                background: #303544;
+                color: white;
+                font-size: 30px;
+                text-align: right;
+                outline: none;
+            }
+
+            input[type="button"] {
+                width: 60px;
+                height: 60px;
+                margin: 5px;
+                border: none;
+                border-radius: 12px;
+                background: #383f50;
+                color: white;
+                font-size: 23px;
+                cursor: pointer;
+                transition: 0.2s;
+            }
+
+            h1 {
+                color: white;
+            }
+
+            input[type="button"]:hover {
+                background: #505a70;
+            }
+
+            input[type="button"]:active {
+                transform: scale(0.92);
+            }
+
+            #piu, #meno, #per, #diviso {
+                background: #526de0;
+            }
+
+            #piu:hover, #meno:hover,
+            #per:hover, #diviso:hover {
+                background: #718aff;
+            }
+
+            #uguale {
+                background: #20ad83;
+                width: 135px;
+            }
+
+            #uguale:hover {
+                background: #29c99b;
+            }
+        </style>
+        <script>
+            let numeri = [];
+            let risultato = 0;
+
+            function controlla() {
+                if (document.getElementById("numero").value == "") {
+                    console.log("Non valido");
+                    return false;
+                }
+                return true;
+            }
+
+            function piu() {
+                if (!controlla()) {
+                    return;
+                }
+                numeri.push(document.getElementById("numero").value);
+                numeri.push("+");
+                console.log(numeri);
+                document.getElementById("numero").value = "";
+            }
+
+            function meno() {
+                if (!controlla()) {
+                    return;
+                }
+                numeri.push(document.getElementById("numero").value);
+                numeri.push("-");
+                console.log(numeri);
+                document.getElementById("numero").value = "";
+            }
+
+            function per() {
+                if (!controlla()) {
+                    return;
+                }
+                numeri.push(document.getElementById("numero").value);
+                numeri.push("*");
+                console.log(numeri);
+                document.getElementById("numero").value = "";
+            }
+
+            function diviso() {
+                if (!controlla()) {
+                    return;
+                }
+                numeri.push(document.getElementById("numero").value);
+                numeri.push("/");
+                console.log(numeri);
+                document.getElementById("numero").value = "";
+            }
+
+            function calcola() {
+                if (!controlla()) {
+                    console.log("Non valido");
+                    return;
+                }
+
+                numeri.push(document.getElementById("numero").value);
+
+                for (let i = 0; i < numeri.length; i++) {
+                    console.log(numeri);
+
+                    if (numeri[i] == "*") {
+                        risultato = Number(numeri[i - 1]) * Number(numeri[i + 1]);
+                        numeri[i] = "";
+                        numeri[i - 1] = risultato.toString();
+                    } else if (numeri[i] == "/") {
+                        risultato = Number(numeri[i - 1]) / Number(numeri[i + 1]);
+                        numeri[i] = "";
+                        numeri[i - 1] = risultato.toString();
+                    }
+                }
+
+                for (let i = 0; i < numeri.length; i++) {
+                    console.log(numeri);
+
+                    if (numeri[i] == "") {
+                        break;   
+                    }
+
+                    if (numeri[i] == "+") {
+                        risultato = Number(numeri[i - 1]) + Number(numeri[i + 1]);
+                        numeri[i] = "";
+                        numeri[i - 1] = risultato.toString();
+                    } else if (numeri[i] == "-") {
+                        risultato = Number(numeri[i - 1]) - Number(numeri[i + 1]);
+                        numeri[i] = "";
+                        numeri[i - 1] = risultato.toString();
+                    }
+                }
+                document.getElementById("ris").innerHTML = risultato; 
+                numeri = [];
+            }
+        </script>
+    </head>
+
+    <body>
+        <label for="numero">Inserisci il numero</label>
+        <input type="Text" id="numero" required>
+        
+        <br>
+        <input type="button" value="+" id="piu" onclick="piu()">
+        <br>
+        <input type="button" value="-" id="meno" onclick="meno()">
+        <br>
+        <input type="button" value="*" id="per" onclick="per()">
+        <br>
+        <input type="button" value="/" id="diviso" onclick="diviso()">
+        <br>
+        <input type="button" value="=" id="uguale" onclick="calcola()">
+
+        <br>
+        <h1 id="ris"></h1>
+    </body>
+</html>
