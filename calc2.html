@@ -1,0 +1,528 @@
+
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calcolatrice Pro</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #171923;
+    font-family: "Segoe UI", Arial, sans-serif;
+    color: white;
+}
+
+.calculator {
+    width: 370px;
+    padding: 22px;
+    background: #20232e;
+    border: 1px solid #353a49;
+    border-radius: 22px;
+    box-shadow: 0 20px 60px #0008;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.header h2 {
+    font-size: 19px;
+    font-weight: 500;
+}
+
+.header button {
+    background: transparent;
+    color: #aaa;
+    border: none;
+    font-size: 21px;
+    cursor: pointer;
+}
+
+.display {
+    min-height: 120px;
+    padding: 15px 5px;
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    overflow: hidden;
+}
+
+#expression {
+    color: #9299aa;
+    font-size: 18px;
+    min-height: 28px;
+    overflow-wrap: anywhere;
+}
+
+#result {
+    font-size: 43px;
+    font-weight: 500;
+    overflow-wrap: anywhere;
+}
+
+.buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 9px;
+}
+
+button.key {
+    height: 65px;
+    border: 1px solid #41485a;
+    border-radius: 12px;
+    background: #303646;
+    color: white;
+    font-size: 21px;
+    cursor: pointer;
+    transition: .15s;
+}
+
+button.key:hover {
+    background: #465067;
+}
+
+button.key:active {
+    transform: scale(.94);
+}
+
+button.operator {
+    background: #394b79;
+    border-color: #526de0;
+}
+
+button.operator:hover {
+    background: #526de0;
+}
+
+button.equal {
+    background: #526de0;
+    border-color: #526de0;
+}
+
+button.equal:hover {
+    background: #718aff;
+}
+
+button.special {
+    background: #272d3b;
+    color: #aebce8;
+}
+
+.history {
+    display: none;
+    border-top: 1px solid #41485a;
+    margin-top: 18px;
+    padding-top: 12px;
+}
+
+.history h3 {
+    font-size: 15px;
+    color: #aaa;
+}
+
+#historyList {
+    max-height: 130px;
+    overflow-y: auto;
+    color: #bbb;
+    font-size: 14px;
+}
+
+.history-item {
+    padding: 8px;
+    border-bottom: 1px solid #343a49;
+    text-align: right;
+}
+
+.footer {
+    text-align: center;
+    color: #697184;
+    font-size: 11px;
+    margin-top: 15px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="calculator">
+
+    <div class="header">
+        <h2>▦ Calcolatrice</h2>
+        <button onclick="toggleHistory()" title="Cronologia">◷</button>
+    </div>
+
+    <div class="display">
+        <div id="expression"></div>
+        <div id="result">0</div>
+    </div>
+
+    <div class="buttons">
+
+        <button class="key special" onclick="clearEntry()">CE</button>
+        <button class="key special" onclick="clearAll()">C</button>
+        <button class="key special" onclick="backspace()">⌫</button>
+        <button class="key operator" onclick="appendOperator('/')">÷</button>
+
+        <button class="key" onclick="appendNumber('7')">7</button>
+        <button class="key" onclick="appendNumber('8')">8</button>
+        <button class="key" onclick="appendNumber('9')">9</button>
+        <button class="key operator" onclick="appendOperator('*')">×</button>
+
+        <button class="key" onclick="appendNumber('4')">4</button>
+        <button class="key" onclick="appendNumber('5')">5</button>
+        <button class="key" onclick="appendNumber('6')">6</button>
+        <button class="key operator" onclick="appendOperator('-')">−</button>
+
+        <button class="key" onclick="appendNumber('1')">1</button>
+        <button class="key" onclick="appendNumber('2')">2</button>
+        <button class="key" onclick="appendNumber('3')">3</button>
+        <button class="key operator" onclick="appendOperator('+')">+</button>
+
+        <button class="key special" onclick="changeSign()">±</button>
+        <button class="key" onclick="appendNumber('0')">0</button>
+        <button class="key" onclick="appendDecimal()">.</button>
+        <button class="key equal" onclick="calculate()">=</button>
+
+        <button class="key special" onclick="percentage()">%</button>
+        <button class="key special" onclick="appendParenthesis('(')">(</button>
+        <button class="key special" onclick="appendParenthesis(')')">)</button>
+        <button class="key special" onclick="squareRoot()">√</button>
+
+    </div>
+
+    <div class="history" id="history">
+        <h3>Cronologia</h3>
+        <div id="historyList">Nessun calcolo effettuato.</div>
+    </div>
+
+    <div class="footer">CALCOLATRICE PRO · WINDOWS STYLE</div>
+
+</div>
+
+<script>
+let expression = "";
+let justCalculated = false;
+let history = [];
+
+const resultDisplay = document.getElementById("result");
+const expressionDisplay = document.getElementById("expression");
+
+function updateDisplay() {
+    expressionDisplay.textContent = expression
+        .replace(/\*/g, "×")
+        .replace(/\//g, "÷");
+
+    resultDisplay.textContent = expression || "0";
+}
+
+function appendNumber(number) {
+    if (justCalculated) {
+        expression = "";
+        justCalculated = false;
+    }
+
+    if (expression.length >= 80) return;
+
+    expression += number;
+    updateDisplay();
+}
+
+function appendDecimal() {
+    if (justCalculated) {
+        expression = "";
+        justCalculated = false;
+    }
+
+    const current = expression.split(/[+\-*/()]/).pop();
+
+    if (!current.includes(".")) {
+        expression += current === "" ? "0." : ".";
+    }
+
+    updateDisplay();
+}
+
+function appendOperator(operator) {
+    if (!expression) {
+        if (operator === "-") {
+            expression = "-";
+            updateDisplay();
+        }
+        return;
+    }
+
+    justCalculated = false;
+
+    if (/[+\-*/.]$/.test(expression)) {
+        expression = expression.slice(0, -1);
+    }
+
+    expression += operator;
+    updateDisplay();
+}
+
+function appendParenthesis(value) {
+    if (justCalculated && value === "(") {
+        expression = "";
+        justCalculated = false;
+    }
+
+    expression += value;
+    updateDisplay();
+}
+
+function clearAll() {
+    expression = "";
+    justCalculated = false;
+    resultDisplay.textContent = "0";
+    expressionDisplay.textContent = "";
+}
+
+function clearEntry() {
+    expression = expression.replace(/(?:\d+\.?\d*|\.\d+)$/, "");
+    justCalculated = false;
+    updateDisplay();
+}
+
+function backspace() {
+    expression = expression.slice(0, -1);
+    justCalculated = false;
+    updateDisplay();
+}
+
+function changeSign() {
+    if (!expression) return;
+
+    const match = expression.match(/(\d+\.?\d*|\.\d+)$/);
+
+    if (match) {
+        const number = match[0];
+        const start = match.index;
+
+        const before = expression.slice(0, start);
+
+        if (before.endsWith("-") &&
+            (before.length === 1 || /[+*/(]/.test(before.at(-2)))) {
+            expression = before.slice(0, -1) + number;
+        } else {
+            expression = before + "(-" + number + ")";
+        }
+
+        updateDisplay();
+    }
+}
+
+function percentage() {
+    const match = expression.match(/(\d+\.?\d*|\.\d+)$/);
+
+    if (!match) return;
+
+    const number = Number(match[0]) / 100;
+
+    expression = expression.slice(0, match.index) + number;
+    updateDisplay();
+}
+
+function squareRoot() {
+    const match = expression.match(/(\d+\.?\d*|\.\d+)$/);
+
+    if (!match) return;
+
+    const number = Number(match[0]);
+
+    if (number < 0) {
+        resultDisplay.textContent = "Errore";
+        return;
+    }
+
+    expression = expression.slice(0, match.index) + Math.sqrt(number);
+    updateDisplay();
+}
+
+// Valutazione sicura delle espressioni matematiche
+function calculateExpression(input) {
+    const tokens = input.match(
+        /\d*\.?\d+|[+\-*/()]|\s+/g
+    );
+
+    if (!tokens) throw new Error("Espressione non valida");
+
+    const clean = tokens.join("").replace(/\s/g, "");
+
+    if (clean !== input.replace(/\s/g, "")) {
+        throw new Error("Caratteri non validi");
+    }
+
+    let position = 0;
+
+    function parseExpression() {
+        let value = parseTerm();
+
+        while (tokens[position] === "+" ||
+               tokens[position] === "-") {
+
+            const operator = tokens[position++].trim();
+            const right = parseTerm();
+
+            value = operator === "+"
+                ? value + right
+                : value - right;
+        }
+
+        return value;
+    }
+
+    function parseTerm() {
+        let value = parseFactor();
+
+        while (tokens[position] === "*" ||
+               tokens[position] === "/") {
+
+            const operator = tokens[position++].trim();
+            const right = parseFactor();
+
+            if (operator === "/" && right === 0) {
+                throw new Error("Divisione per zero");
+            }
+
+            value = operator === "*"
+                ? value * right
+                : value / right;
+        }
+
+        return value;
+    }
+
+    function parseFactor() {
+        if (tokens[position] === "+") {
+            position++;
+            return parseFactor();
+        }
+
+        if (tokens[position] === "-") {
+            position++;
+            return -parseFactor();
+        }
+
+        if (tokens[position] === "(") {
+            position++;
+            const value = parseExpression();
+
+            if (tokens[position] !== ")") {
+                throw new Error("Parentesi non chiusa");
+            }
+
+            position++;
+            return value;
+        }
+
+        const token = tokens[position++];
+
+        if (!token || !/^\d*\.?\d+$/.test(token)) {
+            throw new Error("Espressione non valida");
+        }
+
+        return Number(token);
+    }
+
+    const result = parseExpression();
+
+    if (position !== tokens.length || !Number.isFinite(result)) {
+        throw new Error("Espressione non valida");
+    }
+
+    return result;
+}
+
+function calculate() {
+    if (!expression) return;
+
+    try {
+        const original = expression;
+        const result = calculateExpression(expression);
+
+        history.unshift({
+            expression: original,
+            result: result
+        });
+
+        updateHistory();
+
+        expressionDisplay.textContent =
+            original.replace(/\*/g, "×").replace(/\//g, "÷") + " =";
+
+        expression = Number(result.toPrecision(12)).toString();
+
+        resultDisplay.textContent = expression;
+        justCalculated = true;
+
+    } catch (error) {
+        resultDisplay.textContent = "Errore";
+        expressionDisplay.textContent = error.message;
+    }
+}
+
+function updateHistory() {
+    const list = document.getElementById("historyList");
+
+    list.innerHTML = "";
+
+    history.slice(0, 20).forEach(item => {
+        const div = document.createElement("div");
+        div.className = "history-item";
+
+        const first = document.createElement("div");
+        first.textContent = item.expression;
+
+        const second = document.createElement("strong");
+        second.textContent = "= " + item.result;
+
+        div.append(first, second);
+        list.appendChild(div);
+    });
+}
+
+function toggleHistory() {
+    const panel = document.getElementById("history");
+
+    panel.style.display =
+        panel.style.display === "block" ? "none" : "block";
+}
+
+// Supporto tastiera
+document.addEventListener("keydown", event => {
+    if (/^[0-9]$/.test(event.key)) {
+        appendNumber(event.key);
+    } else if (["+", "-", "*", "/"].includes(event.key)) {
+        appendOperator(event.key);
+    } else if (event.key === ".") {
+        appendDecimal();
+    } else if (event.key === "Enter" || event.key === "=") {
+        event.preventDefault();
+        calculate();
+    } else if (event.key === "Backspace") {
+        backspace();
+    } else if (event.key === "Escape") {
+        clearAll();
+    } else if (event.key === "(" || event.key === ")") {
+        appendParenthesis(event.key);
+    }
+});
+</script>
+
+</body>
+</html>
